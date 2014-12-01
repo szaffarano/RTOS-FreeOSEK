@@ -48,7 +48,7 @@ void queue_push(queue_t *queue, int value) {
 
 	if (next_push == queue->idx_pop) {
 		// cola llena, espero evento de cola vacía
-		q_debug("[%u] queue_push: No pude hacer push, cola llena!\n", t);
+		q_debug("queue_push: No pude hacer push, cola llena!\n");
 		queue_wait_event(queue);
 	}
 
@@ -62,7 +62,7 @@ void queue_push(queue_t *queue, int value) {
 void queue_pop(queue_t *queue, int *value) {
 	if (queue->idx_push == queue->idx_pop) {
 		// cola vacía, espero evento
-		q_debug("[%u] queue_pop: No pude hacer pop, cola vacia\n", t);
+		q_debug("queue_pop: No pude hacer pop, cola vacia\n");
 		queue_wait_event(queue);
 	}
 
@@ -94,9 +94,9 @@ static void queue_wait_event(queue_t *queue) {
 	/* @TODO: usar queue->task como flag? */
 	queue->waiting_event = 1;
 
-	q_debug("[%u] Esperando evento %d para tarea %d\n", queue->task, queue->event);
+	q_debug("Esperando evento %d para tarea %d\n", queue->task, queue->event);
 	WaitEvent(queue->event);
-	q_debug("[%u] Se recibió evento %d para tarea %d\n", queue->task, queue->event);
+	q_debug("Se recibió evento %d para tarea %d\n", queue->task, queue->event);
 	ClearEvent(queue->event);
 }
 

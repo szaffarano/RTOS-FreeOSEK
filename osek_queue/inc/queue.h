@@ -10,7 +10,7 @@
 
 #include <os.h>
 
-#define DEBUG_QUEUE 0
+#define DEBUG_QUEUE 1
 
 #define QUEUE_SIZE	6
 
