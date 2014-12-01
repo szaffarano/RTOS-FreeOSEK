@@ -12,13 +12,12 @@ OS	TiempoTranscurridoOS {
 };
 
 APPMODE = AppMode1;
-EVENT = eventDebounce;
 
 TASK taskTurnOffLED {
     PRIORITY = 1;
     ACTIVATION = 1;
     STACK = 512;
-    TYPE = EXTENDED;
+    TYPE = BASIC;
     SCHEDULE = FULL;
 };
 
@@ -26,12 +25,8 @@ TASK taskDebounce {
     PRIORITY = 10;
     ACTIVATION = 1;
     STACK = 1024;
-    TYPE = EXTENDED;
+    TYPE = BASIC;
     SCHEDULE = FULL;
-    EVENT = eventDebounce;
-	AUTOSTART = TRUE {
-		APPMODE = AppMode1;
-	};
 }
 
 ALARM wakeUpCounter {
@@ -48,13 +43,12 @@ ALARM wakeUpCounter {
 
 ALARM wakeUpDebounce {
     COUNTER = SoftwareCounter;
-    ACTION = SETEVENT {
+    ACTION = ACTIVATETASK {
 		TASK = taskDebounce;
-		EVENT = eventDebounce;
     };
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
-    	ALARMTIME = 0;
+    	ALARMTIME = 1;
     	CYCLETIME = 1;
     };
 };

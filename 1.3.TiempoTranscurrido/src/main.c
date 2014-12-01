@@ -45,20 +45,15 @@ int main(void) {
 }
 
 TASK(taskDebounce) {
-	while (1) {
-		WaitEvent(eventDebounce);
+	debounce_update(&sw4);
 
-		debounce_update(&sw4);
-
-		if (sw4.change == FELL) {
-			counter = 0;
-		} else if (sw4.change == ROSE) {
-			Board_LED_Set(0, true);
-			SetRelAlarm(wakeUpTaskTurnOffLED, counter, 0);
-		}
-
-		ClearEvent(eventDebounce);
+	if (sw4.change == FELL) {
+		counter = 0;
+	} else if (sw4.change == ROSE) {
+		Board_LED_Set(0, true);
+		SetRelAlarm(wakeUpTaskTurnOffLED, counter, 0);
 	}
+
 	TerminateTask();
 }
 
