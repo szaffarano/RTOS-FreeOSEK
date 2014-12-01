@@ -27,10 +27,6 @@ int main(void) {
 	Board_Init();
 
 	Board_LED_Set(0, false);
-//    Chip_GPIO_SetPinDIR(LPC_GPIO, 2, 1, 1);
-//    Chip_GPIO_SetPinDIR(LPC_GPIO, 2, 0, 1);
-//    Chip_GPIO_SetPinDIR(LPC_GPIO, 0, 26, 1);
-
 
 	queue_init(&queue, eventQueue);
 
@@ -50,19 +46,30 @@ TASK(taskToggle) {
 }
 
 TASK(taskProducer) {
-	counter++;
-	printf("Task Producer: pushing value %d\n", counter);
-	queue_push(&queue, counter);
+	while (1) {
+		WaitEvent(eventProduce);
+
+		counter++;
+
+		printf("Task Producer: pushing value %d\n", counter);
+		queue_push(&queue, counter);
+
+		ClearEvent(eventProduce);
+	}
 	TerminateTask();
 }
 
 TASK(taskConsumer) {
 	static int value;
+	while (1) {
+		WaitEvent(eventConsume);
 
-	queue_pop(&queue, &value);
+		queue_pop(&queue, &value);
 
-	printf("Task Consumer: popped value %d\n", value);
+		printf("Task Consumer: popped value %d\n", value);
 
+		ClearEvent(eventConsume);
+	}
 	TerminateTask();
 }
 

@@ -10,6 +10,8 @@
 
 #include <os.h>
 
+#define DEBUG_QUEUE 0
+
 #define QUEUE_SIZE	6
 
 typedef struct {
