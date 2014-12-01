@@ -1,0 +1,68 @@
+OSEK OSEK {
+
+OS	BlinkyIRQ {
+    STATUS = EXTENDED;
+    ERRORHOOK = TRUE;
+    PRETASKHOOK = FALSE;
+	POSTTASKHOOK = FALSE;
+	STARTUPHOOK = FALSE;
+	SHUTDOWNHOOK = FALSE;
+	USERESSCHEDULER = FALSE;
+	MEMMAP = FALSE;
+};
+
+APPMODE = AppMode1;
+
+TASK TareaLED {
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = BASIC;
+    SCHEDULE = NON;
+}
+
+TASK TareaFalling {
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = BASIC;
+    SCHEDULE = NON;
+}
+
+TASK TareaRising {
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = BASIC;
+    SCHEDULE = NON;
+}
+
+ALARM AlarmaFalling {
+    COUNTER = HardwareCounter;
+    ACTION = ACTIVATETASK {
+    	TASK = TareaFalling;
+    }
+}
+
+ALARM AlarmaRising {
+    COUNTER = HardwareCounter;
+    ACTION = ACTIVATETASK {
+    	TASK = TareaRising;
+    }
+}
+
+ISR  ISRBoton {
+	CATEGORY = 2;
+	INTERRUPT = EINT3;
+	PRIORITY = 0;
+}
+
+COUNTER HardwareCounter {
+   MAXALLOWEDVALUE = 60000000;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = HARDWARE;
+};
+
+
+};
