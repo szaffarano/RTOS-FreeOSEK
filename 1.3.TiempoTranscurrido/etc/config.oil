@@ -1,0 +1,96 @@
+OSEK OSEK {
+
+OS	TiempoTranscurridoOS {
+    STATUS = EXTENDED;
+    ERRORHOOK = TRUE;
+    PRETASKHOOK = FALSE;
+	POSTTASKHOOK = FALSE;
+	STARTUPHOOK = FALSE;
+	SHUTDOWNHOOK = FALSE;
+	USERESSCHEDULER = FALSE;
+	MEMMAP = FALSE;
+};
+
+APPMODE = AppMode1;
+EVENT = eventDebounce;
+
+TASK taskTurnOffLED {
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+};
+
+TASK taskDebounce {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 1024;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = eventDebounce;
+	AUTOSTART = TRUE {
+		APPMODE = AppMode1;
+	};
+}
+
+ALARM wakeUpCounter {
+    COUNTER = SoftwareCounter;
+    ACTION = ALARMCALLBACK {
+        ALARMCALLBACKNAME = "counterHook";
+    };
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    	ALARMTIME = 0;
+    	CYCLETIME = 1;
+    };
+};
+
+ALARM wakeUpDebounce {
+    COUNTER = SoftwareCounter;
+    ACTION = SETEVENT {
+		TASK = taskDebounce;
+		EVENT = eventDebounce;
+    };
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    	ALARMTIME = 0;
+    	CYCLETIME = 1;
+    };
+};
+
+ALARM wakeUpTaskTurnOffLED {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskTurnOffLED;
+    };
+};
+
+COUNTER HardwareCounter {
+   MAXALLOWEDVALUE = 100;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = HARDWARE;
+   COUNTER = HWCOUNTER0;
+};
+
+COUNTER SoftwareCounter {
+   MAXALLOWEDVALUE = 5000;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = SOFTWARE;
+};
+
+ALARM IncrementSWCounter {
+   COUNTER = HardwareCounter;
+   ACTION = INCREMENT {
+      COUNTER = SoftwareCounter;
+   };
+   AUTOSTART = TRUE {
+      APPMODE = AppMode1;
+      ALARMTIME = 1;
+      CYCLETIME = 1;
+   };
+};
+
+};
