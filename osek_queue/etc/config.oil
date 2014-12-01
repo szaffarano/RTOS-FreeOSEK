@@ -1,0 +1,106 @@
+OSEK OSEK {
+
+OS	QueueOS {
+    STATUS = EXTENDED;
+    ERRORHOOK = TRUE;
+    PRETASKHOOK = FALSE;
+	POSTTASKHOOK = FALSE;
+	STARTUPHOOK = FALSE;
+	SHUTDOWNHOOK = FALSE;
+	USERESSCHEDULER = FALSE;
+	MEMMAP = FALSE;
+};
+
+APPMODE = AppMode1;
+EVENT = eventQueue;
+
+TASK taskToggle {
+    PRIORITY = 20;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = BASIC;
+    SCHEDULE = NON;
+};
+
+TASK taskProducer {
+    PRIORITY = 20;
+    ACTIVATION = 1;
+    STACK = 1024;
+    TYPE = EXTENDED;
+    SCHEDULE = NON;
+    EVENT = eventQueue;
+};
+
+TASK taskConsumer {
+    PRIORITY = 20;
+    ACTIVATION = 1;
+    STACK = 1024;
+    TYPE = EXTENDED;
+    SCHEDULE = NON;
+    EVENT = eventQueue;
+};
+
+ALARM fireProduceEvent {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskProducer;
+    };
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    	ALARMTIME = 0;
+    	CYCLETIME = 800;
+    };
+};
+
+ALARM fireConsumeEvent {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskConsumer;
+    };
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    	ALARMTIME = 500;
+    	CYCLETIME = 1000;
+    };
+};
+
+ALARM fireToggleLedEvent {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskToggle;
+    };
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    	ALARMTIME = 0;
+    	CYCLETIME = 300;
+    };
+};
+
+COUNTER HardwareCounter {
+   MAXALLOWEDVALUE = 100;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = HARDWARE;
+   COUNTER = HWCOUNTER0;
+};
+
+COUNTER SoftwareCounter {
+   MAXALLOWEDVALUE = 5000;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = SOFTWARE;
+};
+
+ALARM IncrementSWCounter {
+   COUNTER = HardwareCounter;
+   ACTION = INCREMENT {
+      COUNTER = SoftwareCounter;
+   };
+   AUTOSTART = TRUE {
+      APPMODE = AppMode1;
+      ALARMTIME = 1;
+      CYCLETIME = 1;
+   };
+};
+
+};
