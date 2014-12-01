@@ -15,7 +15,20 @@
 #define q_debug(format, ...)
 #endif
 
+/**
+ * Calcula el siguiente índice en la cola circular
+ */
 static inline int next_idx(int idx);
+
+/**
+ * Espera por el evento para continuar con la operación (push / pop)
+ */
+static void queue_wait_event(queue_t *queue);
+
+/**
+ * Si hay otra tarea que está bloqueada esperando el evento, lo dispara
+ */
+static void queue_fire_event(queue_t *queue);
 
 void queue_init(queue_t* queue, EventMaskType event) {
 	int i = 0;
@@ -27,73 +40,39 @@ void queue_init(queue_t* queue, EventMaskType event) {
 
 	// OSEK stuf
 	queue->event = event;
-	queue->waiting_push = 0;
-	queue->waiting_pop = 0;
+	queue->waiting_event = 0;
 }
 
 void queue_push(queue_t *queue, int value) {
-	static TaskType t;
-	GetTaskID(&t);
-	q_debug("[%u] queue_push\n", t);
-
 	int next_push = next_idx(queue->idx_push);
 
 	if (next_push == queue->idx_pop) {
 		// cola llena, espero evento de cola vacía
 		q_debug("[%u] queue_push: No pude hacer push, cola llena!\n", t);
-
-		GetTaskID(&(queue->task));
-		queue->waiting_pop = 1;
-
-		q_debug("[%u] queue_push: Esperando evento %d para tarea %d\n", t, queue->event, queue->task);
-
-		WaitEvent(queue->event);
-
-		q_debug("[%u] queue_push: Se recibió evento %d para tarea %d\n", t, queue->event, queue->task);
-
-		ClearEvent(queue->event);
+		queue_wait_event(queue);
 	}
 
 	queue->idx_push = next_push;
 	queue->data[next_push] = value;
 
 	// si hay una tarea esperando un evento, notifico
-	if (queue->waiting_push) {
-		q_debug("[%u] queue_push: Disparando evento %d para tarea %d\n", t, queue->event, queue->task);
-
-		SetEvent(queue->task, queue->event);
-		queue->waiting_push = 0;
-	}
+	queue_fire_event(queue);
 }
 
 void queue_pop(queue_t *queue, int *value) {
-	static TaskType t;
-	GetTaskID(&t);
-	q_debug("[%u] queue_pop\n", t);
-
 	if (queue->idx_push == queue->idx_pop) {
 		// cola vacía, espero evento
 		q_debug("[%u] queue_pop: No pude hacer pop, cola vacia\n", t);
-
-		GetTaskID(&(queue->task));
-		queue->waiting_push = 1;
-		q_debug("[%u] queue_pop: Esperando evento %d para tarea %d\n", t, queue->event, queue->task);
-
-		WaitEvent(queue->event);
-		q_debug("[%u] queue_pop: Se recibió el evento %d para tarea %d\n", t, queue->event, queue->task);
-		ClearEvent(queue->event);
+		queue_wait_event(queue);
 	}
+
 	int i = next_idx(queue->idx_pop);
 	*value = queue->data[i];
 	queue->data[i] = -1;
 	queue->idx_pop = i;
 
 	// si hay una tarea esperando un evento, notifico
-	if (queue->waiting_pop) {
-		q_debug("[%u] queue_popo: Disparando evento %d para tarea %d\n", t, queue->event, queue->task);
-		SetEvent(queue->task, queue->event);
-		queue->waiting_pop = 0;
-	}
+	queue_fire_event(queue);
 }
 
 void queue_dump(queue_t *queue) {
@@ -101,9 +80,35 @@ void queue_dump(queue_t *queue) {
 	q_debug("[");
 	for (; i < QUEUE_SIZE; i++) {
 		q_debug("%3d%s", queue->data[i], (i + 1) == QUEUE_SIZE ? "" : ", ");
-	} q_debug("]\n");
+	}q_debug("]\n");
 }
 
 static inline int next_idx(int idx) {
 	return (idx + 1) % QUEUE_SIZE;
+}
+
+static void queue_wait_event(queue_t *queue) {
+	/* obtener id de tarea que desencadena el bloqueo */
+	GetTaskID(&(queue->task));
+
+	/* @TODO: usar queue->task como flag? */
+	queue->waiting_event = 1;
+
+	q_debug("[%u] Esperando evento %d para tarea %d\n", queue->task, queue->event);
+	WaitEvent(queue->event);
+	q_debug("[%u] Se recibió evento %d para tarea %d\n", queue->task, queue->event);
+	ClearEvent(queue->event);
+}
+
+static void queue_fire_event(queue_t *queue) {
+	/* sólo para debug... */
+	TaskType current_task;
+
+	/* @TODO: usar queue->task como flag? */
+	if (queue->waiting_event) {
+		GetTaskID(&current_task);
+		q_debug("[%u] Disparando evento %d para tarea %d\n", current_task, queue->event, queue->task);
+		SetEvent(queue->task, queue->event);
+		queue->waiting_event = 0;
+	}
 }

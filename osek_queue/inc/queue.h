@@ -22,13 +22,29 @@ typedef struct {
 	// datos para sincronización OSEK
 	EventMaskType event;
 	TaskType task;
-	int waiting_push;
-	int waiting_pop;
+	int waiting_event;
 } queue_t;
 
+/**
+ * Inicializa la cola.
+ */
 void queue_init(queue_t* queue, EventMaskType event);
+
+/**
+ * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.
+ * @TODO: ¿agregar timeout de bloqueo? ¿modificar la firma para que devuelva estado de la operación?
+ */
 void queue_push(queue_t *queue, int value);
+
+/**
+ * Quita un elemento de la cola.  Si la cola está vacía se bloquea hasta que haya algún slot ocupado.
+ * @TODO: ¿agregar timeout de bloqueo? ¿modificar la firma para que devuelva estado de la operación?
+ */
 void queue_pop(queue_t *queue, int *value);
+
+/**
+ * Función de debug que hace un printf con la representación de la cola.
+ */
 void queue_dump(queue_t *queue);
 
 #endif /* QUEUE_H_ */
