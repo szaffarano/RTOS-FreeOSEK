@@ -20,7 +20,6 @@
 static queue_t queue;
 static int counter;
 
-//#define printf(...)
 int main(void) {
 	SystemCoreClockUpdate();
 
@@ -46,30 +45,26 @@ TASK(taskToggle) {
 }
 
 TASK(taskProducer) {
-	while (1) {
-		WaitEvent(eventProduce);
+	static int counter = 0;
 
-		counter++;
+	printf("Task Producer: pushing value %d\n", counter);
+	queue_push(&queue, counter);
 
-		printf("Task Producer: pushing value %d\n", counter);
-		queue_push(&queue, counter);
+	SetRelAlarm(activateProducer, 300, 0);
 
-		ClearEvent(eventProduce);
-	}
+	counter++;
+
 	TerminateTask();
 }
 
 TASK(taskConsumer) {
 	static int value;
-	while (1) {
-		WaitEvent(eventConsume);
 
-		queue_pop(&queue, &value);
+	queue_pop(&queue, &value);
+	printf("Task Consumer: popped value %d\n", value);
 
-		printf("Task Consumer: popped value %d\n", value);
+	SetRelAlarm(activateConsumer, 500, 0);
 
-		ClearEvent(eventConsume);
-	}
 	TerminateTask();
 }
 

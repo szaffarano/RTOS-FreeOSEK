@@ -13,8 +13,6 @@ OS	QueueOS {
 
 APPMODE = AppMode1;
 EVENT = eventQueue;
-EVENT = eventProduce;
-EVENT = eventConsume;
 
 TASK taskToggle {
     PRIORITY = 10;
@@ -31,7 +29,6 @@ TASK taskProducer {
     TYPE = EXTENDED;
     SCHEDULE = FULL;
     EVENT = eventQueue;
-    EVENT = eventProduce;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     }
@@ -44,35 +41,22 @@ TASK taskConsumer {
     TYPE = EXTENDED;
     SCHEDULE = FULL;
     EVENT = eventQueue;
-    EVENT = eventConsume;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     }
 };
 
-ALARM fireProduceEvent {
+ALARM activateProducer {
     COUNTER = SoftwareCounter;
-    ACTION = SETEVENT {
+    ACTION = ACTIVATETASK {
         TASK = taskProducer;
-        EVENT = eventProduce;
-    };
-    AUTOSTART = TRUE {
-    	APPMODE = AppMode1;
-    	ALARMTIME = 0;
-    	CYCLETIME = 100;
     };
 };
 
-ALARM fireConsumeEvent {
+ALARM activateConsumer {
     COUNTER = SoftwareCounter;
-    ACTION = SETEVENT {
+    ACTION = ACTIVATETASK {
         TASK = taskConsumer;
-        EVENT = eventConsume;
-    };
-    AUTOSTART = TRUE {
-    	APPMODE = AppMode1;
-    	ALARMTIME = 300;
-    	CYCLETIME = 500;
     };
 };
 
