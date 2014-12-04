@@ -26,7 +26,7 @@ TASK taskDebounce {
     ACTIVATION = 1;
     STACK = 1024;
     TYPE = BASIC;
-    SCHEDULE = FULL;
+    SCHEDULE = NON;
 }
 
 ALARM wakeUpCounter {
@@ -48,8 +48,8 @@ ALARM wakeUpDebounce {
     };
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
-    	ALARMTIME = 1;
-    	CYCLETIME = 1;
+    	ALARMTIME = 0;
+    	CYCLETIME = 2;
     };
 };
 
