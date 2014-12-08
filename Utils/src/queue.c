@@ -18,7 +18,7 @@
 /**
  * Calcula el siguiente índice en la cola circular
  */
-static inline int next_idx(int idx);
+static inline int next_idx(int idx, unsigned int size);
 
 /**
  * Espera por el evento para continuar con la operación (push / pop)
@@ -30,16 +30,17 @@ static void queue_wait_event(queue_t *queue);
  */
 static void queue_fire_event(queue_t *queue);
 
-void queue_init(queue_t* queue, queue_event_cb wait_cb, queue_event_cb fire_cb) {
+void queue_init(queue_t* queue, unsigned int size, queue_event_cb wait_cb, queue_event_cb fire_cb) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
+	queue->size = size;
 	queue->wait_event_cb = wait_cb;
 	queue->fire_event_cb = fire_cb;
 	queue->waiting_event = 0;
 }
 
 void queue_push(queue_t *queue, int value) {
-	int next_push = next_idx(queue->idx_push);
+	int next_push = next_idx(queue->idx_push, queue->size);
 
 	if (next_push == queue->idx_pop) {
 		// cola llena, espero evento de cola vacía
@@ -61,7 +62,7 @@ void queue_pop(queue_t *queue, int *value) {
 		queue_wait_event(queue);
 	}
 
-	int i = next_idx(queue->idx_pop);
+	int i = next_idx(queue->idx_pop, queue->size);
 	*value = queue->data[i];
 	queue->data[i] = -1;
 	queue->idx_pop = i;
@@ -73,13 +74,13 @@ void queue_pop(queue_t *queue, int *value) {
 void queue_dump(queue_t *queue) {
 	int i = 0;
 	q_debug("[");
-	for (; i < QUEUE_SIZE; i++) {
-		q_debug("%3d%s", queue->data[i], (i + 1) == QUEUE_SIZE ? "" : ", ");
+	for (; i < queue->size; i++) {
+		q_debug("%3d%s", queue->data[i], (i + 1) == queue->size ? "" : ", ");
 	}q_debug("]\n");
 }
 
-static inline int next_idx(int idx) {
-	return (idx + 1) % QUEUE_SIZE;
+static inline int next_idx(int idx, unsigned int size) {
+	return (idx + 1) % size;
 }
 
 static void queue_wait_event(queue_t *queue) {

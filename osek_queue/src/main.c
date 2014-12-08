@@ -35,7 +35,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, wait_event, fire_event);
+	queue_init(&queue, 5, wait_event, fire_event);
 
 	counter = 0;
 

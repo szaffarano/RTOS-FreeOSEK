@@ -10,13 +10,14 @@
 
 #define DEBUG_QUEUE 1
 
-#define QUEUE_SIZE	6
+#define MAX_QUEUE_SIZE	128
 
 typedef void(*queue_event_cb)(void*);
 
 typedef struct {
-	int data[QUEUE_SIZE];
+	int data[MAX_QUEUE_SIZE];
 
+	unsigned int size;
 	unsigned int idx_push;
 	unsigned int idx_pop;
 	queue_event_cb wait_event_cb;
@@ -26,9 +27,9 @@ typedef struct {
 
 
 /**
- * Inicializa la cola.
+ * Inicializa la cola.  Recibe el tamaño de la cola.
  */
-void queue_init(queue_t* queue, queue_event_cb wait_cb, queue_event_cb fire_cb);
+void queue_init(queue_t* queue, unsigned int size, queue_event_cb wait_cb, queue_event_cb fire_cb);
 
 /**
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.
