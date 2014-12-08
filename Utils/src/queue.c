@@ -33,7 +33,7 @@ static void queue_fire_event(queue_t *queue);
 void queue_init(queue_t* queue, unsigned int size, queue_event_cb wait_cb, queue_event_cb fire_cb) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
-	queue->size = size;
+	queue->size = (size+1)< MAX_QUEUE_SIZE ? (size+1) : MAX_QUEUE_SIZE;
 	queue->wait_event_cb = wait_cb;
 	queue->fire_event_cb = fire_cb;
 	queue->waiting_event = 0;
