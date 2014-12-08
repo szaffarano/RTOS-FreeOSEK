@@ -30,16 +30,11 @@ static void queue_wait_event(queue_t *queue);
  */
 static void queue_fire_event(queue_t *queue);
 
-void queue_init(queue_t* queue, EventMaskType event) {
-	int i = 0;
-	for (; i < QUEUE_SIZE; i++) {
-		queue->data[i] = -1;
-	}
+void queue_init(queue_t* queue, queue_event_cb wait_cb, queue_event_cb fire_cb) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
-
-	// OSEK stuf
-	queue->event = event;
+	queue->wait_event_cb = wait_cb;
+	queue->fire_event_cb = fire_cb;
 	queue->waiting_event = 0;
 }
 
@@ -88,27 +83,16 @@ static inline int next_idx(int idx) {
 }
 
 static void queue_wait_event(queue_t *queue) {
-	/* obtener id de tarea que desencadena el bloqueo */
-	GetTaskID(&(queue->task));
-
-	/* @TODO: usar queue->task como flag? */
 	queue->waiting_event = 1;
-
-	q_debug("Esperando evento %d para tarea %d\n", queue->task, queue->event);
-	WaitEvent(queue->event);
-	q_debug("Se recibió evento %d para tarea %d\n", queue->task, queue->event);
-	ClearEvent(queue->event);
+	q_debug("Invocando callback wait_event\n");
+	queue->wait_event_cb(queue);
+	q_debug("Callback wait_event devolvió el control\n");
 }
 
 static void queue_fire_event(queue_t *queue) {
-	/* sólo para debug... */
-	TaskType current_task;
-
-	/* @TODO: usar queue->task como flag? */
 	if (queue->waiting_event) {
-		GetTaskID(&current_task);
-		q_debug("[%u] Disparando evento %d para tarea %d\n", current_task, queue->event, queue->task);
-		SetEvent(queue->task, queue->event);
+		q_debug("Invocando callback fire_event\n");
+		queue->fire_event_cb(queue);
 		queue->waiting_event = 0;
 	}
 }

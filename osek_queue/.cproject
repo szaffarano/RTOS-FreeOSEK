@@ -35,6 +35,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.536298970" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Utils/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/osek/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/osek/inc/cortexM4}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/osek/inc/cortexM4/lpc43xx}&quot;"/>
@@ -60,10 +61,12 @@
 								<option id="com.crt.advproject.link.gcc.hdrlib.1567808386" name="Library" superClass="com.crt.advproject.link.gcc.hdrlib" value="com.crt.advproject.gcc.link.hdrlib.codered.semihost" valueType="enumerated"/>
 								<option id="gnu.c.link.option.libs.2076135089" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="lpc_board_nxp_lpcxpresso_1769"/>
+									<listOptionValue builtIn="false" value="Utils"/>
 									<listOptionValue builtIn="false" value="lpc_chip_175x_6x"/>
 								</option>
 								<option id="gnu.c.link.option.paths.634042218" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lpc_board_nxp_lpcxpresso_1769/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Utils/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lpc_chip_175x_6x/Debug}&quot;"/>
 								</option>
 								<option id="com.crt.advproject.link.crpenable.945988918" name="Enable Code Read Protect" superClass="com.crt.advproject.link.crpenable" value="true" valueType="boolean"/>

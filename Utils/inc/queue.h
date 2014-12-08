@@ -8,27 +8,27 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-#include <os.h>
-
 #define DEBUG_QUEUE 1
 
 #define QUEUE_SIZE	6
 
+typedef void(*queue_event_cb)(void*);
+
 typedef struct {
-	unsigned int idx_push;
-	unsigned int idx_pop;
 	int data[QUEUE_SIZE];
 
-	// datos para sincronización OSEK
-	EventMaskType event;
-	TaskType task;
+	unsigned int idx_push;
+	unsigned int idx_pop;
+	queue_event_cb wait_event_cb;
+	queue_event_cb fire_event_cb;
 	int waiting_event;
 } queue_t;
+
 
 /**
  * Inicializa la cola.
  */
-void queue_init(queue_t* queue, EventMaskType event);
+void queue_init(queue_t* queue, queue_event_cb wait_cb, queue_event_cb fire_cb);
 
 /**
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.

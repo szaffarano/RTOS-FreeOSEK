@@ -17,8 +17,16 @@
 
 #include <queue.h>
 
+#define	PRODUCER_CYCLE	300
+#define	CONSUMER_CYCLE	500
+
 static queue_t queue;
 static int counter;
+
+static void wait_event(void*);
+static void fire_event(void*);
+
+static TaskType taskWaiting;
 
 int main(void) {
 	SystemCoreClockUpdate();
@@ -27,7 +35,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, eventQueue);
+	queue_init(&queue, wait_event, fire_event);
 
 	counter = 0;
 
@@ -50,7 +58,7 @@ TASK(taskProducer) {
 	printf("Task Producer: pushing value %d\n", counter);
 	queue_push(&queue, counter);
 
-	SetRelAlarm(activateProducer, 300, 0);
+	SetRelAlarm(activateProducer, PRODUCER_CYCLE, 0);
 
 	counter++;
 
@@ -63,7 +71,7 @@ TASK(taskConsumer) {
 	queue_pop(&queue, &value);
 	printf("Task Consumer: popped value %d\n", value);
 
-	SetRelAlarm(activateConsumer, 500, 0);
+	SetRelAlarm(activateConsumer, CONSUMER_CYCLE, 0);
 
 	TerminateTask();
 }
@@ -71,4 +79,23 @@ TASK(taskConsumer) {
 void ErrorHook(void) {
 	/* kernel panic :( */
 	ShutdownOS(0);
+}
+
+static void wait_event(void* d) {
+	if (taskWaiting) {
+		printf("queue: ERROR! ya hay una tarea esperando un evento\n");
+		ErrorHook();
+	}
+	GetTaskID(&taskWaiting);
+	WaitEvent(eventQueue);
+	taskWaiting = 0;
+	ClearEvent(eventQueue);
+}
+
+static void fire_event(void* d) {
+	if (!taskWaiting) {
+		printf("queue: ERROR! no hay tarea esperando, imposible disparar evento\n");
+		ErrorHook();
+	}
+	SetEvent(taskWaiting, eventQueue);
 }
