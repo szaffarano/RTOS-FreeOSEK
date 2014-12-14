@@ -12,12 +12,10 @@
 #define BLINKS				5
 
 // callbacks
-static void wait_event(void*);
-static void fire_event(void*);
+static void queue_cb(queue_event_t event);
 static int is_sw4_pushed(void* args);
 
 static debounce_t sw4;
-static TaskType taskWaiting;
 static unsigned int blinkCounter;
 static queue_t queue;
 
@@ -32,7 +30,7 @@ int main(void) {
 	Chip_GPIO_SetDir(LPC_GPIO, 1, 31, false);
 	sw4 = debounce_add(DEBOUNCE_TIME / DEBOUNCE_CYCLE, is_sw4_pushed, NULL);
 
-	queue_init(&queue, 10, wait_event, fire_event);
+	queue_init(&queue, 10, queue_cb);
 
 	StartOS(AppMode1);
 
@@ -91,26 +89,40 @@ static int is_sw4_pushed(void* args) {
 	return !Chip_GPIO_GetPinState(LPC_GPIO, 1, 31);
 }
 
-static void wait_event(void* d) {
-	if (taskWaiting) {
-		printf("queue: ERROR! ya hay una tarea esperando un evento\n");
-		ErrorHook();
+static void queue_cb(queue_event_t event) {
+	static TaskType taskWaitingPush;
+	static TaskType taskWaitingPop;
+
+	if (event == WAIT_EVENT_PUSH) {
+		if (taskWaitingPush) {
+			printf("queue: ya hay una tarea esperando un evento de push\n");
+			ErrorHook();
+		}
+		GetTaskID(&taskWaitingPush);
+		WaitEvent(eventQueue);
+		taskWaitingPush = 0;
+		ClearEvent(eventQueue);
+	} else if (event == FIRE_EVENT_PUSH) {
+		if (!taskWaitingPush) {
+			printf("queue: no hay tarea esperando un eventu de push\n");
+			ErrorHook();
+		}
+		SetEvent(taskWaitingPush, eventQueue);
+	} else if (event == WAIT_EVENT_POP) {
+		if (taskWaitingPop) {
+			printf("queue: ya hay una tarea esperando un evento de pop\n");
+			ErrorHook();
+		}
+		GetTaskID(&taskWaitingPop);
+		WaitEvent(eventQueue);
+		taskWaitingPop = 0;
+		ClearEvent(eventQueue);
+	} else if (event == FIRE_EVENT_POP) {
+		if (!taskWaitingPop) {
+			printf("queue: ya hay una tarea esperando un evento de pop\n");
+			ErrorHook();
+		}
+		SetEvent(taskWaitingPop, eventQueue);
 	}
-	GetTaskID(&taskWaiting);
-
-	WaitEvent(eventQueue);
-
-	taskWaiting = 0;
-
-	ClearEvent(eventQueue);
 }
 
-static void fire_event(void* d) {
-	if (!taskWaiting) {
-		printf(
-				"queue: ERROR! no hay tarea esperando, imposible disparar evento\n");
-		ErrorHook();
-	}
-
-	SetEvent(taskWaiting, eventQueue);
-}
