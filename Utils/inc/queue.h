@@ -12,7 +12,11 @@
 
 #define MAX_QUEUE_SIZE	128
 
-typedef void(*queue_event_cb)(void*);
+typedef enum {
+	WAIT_EVENT_PUSH, FIRE_EVENT_PUSH, WAIT_EVENT_POP, FIRE_EVENT_POP
+} queue_event_t;
+
+typedef void (*queue_event_cb_t)(queue_event_t);
 
 typedef struct {
 	int data[MAX_QUEUE_SIZE];
@@ -20,16 +24,16 @@ typedef struct {
 	unsigned int size;
 	unsigned int idx_push;
 	unsigned int idx_pop;
-	queue_event_cb wait_event_cb;
-	queue_event_cb fire_event_cb;
-	int waiting_event;
-} queue_t;
+	queue_event_cb_t queue_event_cb;
 
+	int blocked_by_push;
+	int blocked_by_pop;
+} queue_t;
 
 /**
  * Inicializa la cola.  Recibe el tamaño de la cola.
  */
-void queue_init(queue_t* queue, unsigned int size, queue_event_cb wait_cb, queue_event_cb fire_cb);
+void queue_init(queue_t* queue, unsigned int size, queue_event_cb_t queue_cb);
 
 /**
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.

@@ -17,16 +17,13 @@
 
 #include <queue.h>
 
-#define	PRODUCER_CYCLE	300
-#define	CONSUMER_CYCLE	500
+#define	PRODUCER_CYCLE	1300
+#define	CONSUMER_CYCLE	100
 
 static queue_t queue;
 static int counter;
 
-static void wait_event(void*);
-static void fire_event(void*);
-
-static TaskType taskWaiting;
+static void queue_cb(queue_event_t event);
 
 int main(void) {
 	SystemCoreClockUpdate();
@@ -35,7 +32,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, 5, wait_event, fire_event);
+	queue_init(&queue, 5, queue_cb);
 
 	counter = 0;
 
@@ -81,21 +78,39 @@ void ErrorHook(void) {
 	ShutdownOS(0);
 }
 
-static void wait_event(void* d) {
-	if (taskWaiting) {
-		printf("queue: ERROR! ya hay una tarea esperando un evento\n");
-		ErrorHook();
-	}
-	GetTaskID(&taskWaiting);
-	WaitEvent(eventQueue);
-	taskWaiting = 0;
-	ClearEvent(eventQueue);
-}
+static void queue_cb(queue_event_t event) {
+	static TaskType taskWaitingPush;
+	static TaskType taskWaitingPop;
 
-static void fire_event(void* d) {
-	if (!taskWaiting) {
-		printf("queue: ERROR! no hay tarea esperando, imposible disparar evento\n");
-		ErrorHook();
+	if (event == WAIT_EVENT_PUSH) {
+		if (taskWaitingPush) {
+			printf("queue: ya hay una tarea esperando un evento de push\n");
+			ErrorHook();
+		}
+		GetTaskID(&taskWaitingPush);
+		WaitEvent(eventQueue);
+		taskWaitingPush = 0;
+		ClearEvent(eventQueue);
+	} else if (event == FIRE_EVENT_PUSH) {
+		if (!taskWaitingPush) {
+			printf("queue: no hay tarea esperando un eventu de push\n");
+			ErrorHook();
+		}
+		SetEvent(taskWaitingPush, eventQueue);
+	} else if (event == WAIT_EVENT_POP) {
+		if (taskWaitingPop) {
+			printf("queue: ya hay una tarea esperando un evento de pop\n");
+			ErrorHook();
+		}
+		GetTaskID(&taskWaitingPop);
+		WaitEvent(eventQueue);
+		taskWaitingPop = 0;
+		ClearEvent(eventQueue);
+	} else if (event == FIRE_EVENT_POP) {
+		if (!taskWaitingPop) {
+			printf("queue: ya hay una tarea esperando un evento de pop\n");
+			ErrorHook();
+		}
+		SetEvent(taskWaitingPop, eventQueue);
 	}
-	SetEvent(taskWaiting, eventQueue);
 }
