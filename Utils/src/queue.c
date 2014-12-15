@@ -153,6 +153,7 @@ static queue_status_t queue_wait_event_push(queue_t *queue, unsigned long timeou
 		queue->task_waiting_timeout_push = NULL_TASK;
 		if (next_push == queue->idx_pop) {
 			q_debug("queue_wait_event_push: Timeout\n");
+			queue->blocked_by_push = 0;
 			status = QUEUE_TIMEOUT;
 		} else {
 			q_debug("queue_wait_event_push: Se devolvió el control antes de irse por timeout\n");
@@ -221,6 +222,7 @@ static queue_status_t queue_wait_event_pop(queue_t *queue, unsigned long timeout
 
 		if (queue->idx_push == queue->idx_pop) {
 			q_debug("queue_wait_event_pop: Timeout\n");
+			queue->blocked_by_pop = 0;
 			status = QUEUE_TIMEOUT;
 		} else {
 			q_debug("queue_wait_event_pop: Se devolvió el control antes de irse por timeout\n");
