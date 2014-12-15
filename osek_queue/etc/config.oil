@@ -13,7 +13,8 @@ OS	QueueOS {
 
 APPMODE = AppMode1;
 EVENT = EventQueue;
-EVENT = EventTimeout;
+EVENT = EventTimeoutPush;
+EVENT = EventTimeoutPop;
 
 TASK taskProducer {
     PRIORITY = 20;
@@ -47,18 +48,33 @@ TASK taskToggle {
     SCHEDULE = FULL;
 };
 
-TASK TaskTimeout {
+TASK TaskTimeoutPush {
     PRIORITY = 10;
     ACTIVATION = 1;
     STACK = 512;
     TYPE = EXTENDED;
     SCHEDULE = FULL;
-    EVENT = EventTimeout;
+    EVENT = EventTimeoutPush;
 };
-ALARM AlarmTimeout {
+ALARM AlarmTimeoutPush {
     COUNTER = SoftwareCounter;
     ACTION = ACTIVATETASK {
-        TASK = TaskTimeout;
+        TASK = TaskTimeoutPush;
+    };
+};
+
+TASK TaskTimeoutPop {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPop;
+};
+ALARM AlarmTimeoutPop {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPop;
     };
 };
 

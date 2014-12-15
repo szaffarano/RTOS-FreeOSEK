@@ -17,9 +17,9 @@
 
 #include <queue.h>
 
-#define	PRODUCER_CYCLE		1000
-#define PRODUCER_TIMEOUT	5000
-#define	CONSUMER_CYCLE		300
+#define	PRODUCER_CYCLE		500
+#define PRODUCER_TIMEOUT	1000
+#define	CONSUMER_CYCLE		3000
 #define CONSUMER_TIMEOUT	2000
 
 static queue_t queue;
@@ -32,7 +32,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, 1, EventQueue, AlarmTimeout);
+	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop);
 
 	counter = 0;
 
@@ -81,8 +81,12 @@ TASK(taskConsumer) {
 	TerminateTask();
 }
 
-TASK(TaskTimeout) {
-	SetEvent(queue.taskWaitingTimeout, EventQueue);
+TASK(TaskTimeoutPush) {
+	SetEvent(queue.taskWaitingTimeoutPush, EventQueue);
+	TerminateTask();
+}
+TASK(TaskTimeoutPop) {
+	SetEvent(queue.taskWaitingTimeoutPop, EventQueue);
 	TerminateTask();
 }
 
