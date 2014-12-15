@@ -21,7 +21,7 @@
 
 /* ############################## [encabezados de funciones privadas] ##############################*/
 static inline int next_idx(int idx, unsigned int size);
-static queue_status_t queue_wait_event_push(queue_t *queue, unsigned long timeout, int next_push);
+static queue_status_t queue_wait_event_push(queue_t *queue, unsigned long timeout);
 static void queue_fire_event_push(queue_t *queue);
 static queue_status_t queue_wait_event_pop(queue_t *queue, unsigned long timeout);
 static void queue_fire_event_pop(queue_t *queue);
@@ -56,8 +56,7 @@ queue_status_t queue_push(queue_t *queue, int value, unsigned long timeout) {
 		// cola llena, espero evento de cola vacía
 		q_debug("queue_push: Cola llena\n");
 
-		// @TODO no enviar parámetro "next_push", recalcularlo cuando haga falta.
-		status = queue_wait_event_push(queue, timeout, next_push);
+		status = queue_wait_event_push(queue, timeout);
 
 		if (status != QUEUE_OK) {
 			return status;
@@ -109,9 +108,10 @@ static inline int next_idx(int idx, unsigned int size) {
 	return (idx + 1) % size;
 }
 
-static queue_status_t queue_wait_event_push(queue_t *queue, unsigned long timeout, int next_push) {
+static queue_status_t queue_wait_event_push(queue_t *queue, unsigned long timeout) {
 	queue_status_t status = QUEUE_OK;
 	unsigned long elapsedTime = 0;
+	int next_push = next_idx(queue->idx_push, queue->size);
 
 	queue->blocked_by_push = 1;
 	q_debug("queue_wait_event_push: Invocando wait_event_push\n");
