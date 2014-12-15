@@ -12,7 +12,6 @@
 #define BLINKS				5
 
 // callbacks
-static void queue_cb(queue_event_t event);
 static int is_sw4_pushed(void* args);
 
 static debounce_t sw4;
@@ -30,7 +29,7 @@ int main(void) {
 	Chip_GPIO_SetDir(LPC_GPIO, 1, 31, false);
 	sw4 = debounce_add(DEBOUNCE_TIME / DEBOUNCE_CYCLE, is_sw4_pushed, NULL);
 
-	queue_init(&queue, 1, queue_cb);
+	queue_init(&queue, 1, eventQueue);
 
 	StartOS(AppMode1);
 
@@ -87,42 +86,5 @@ void ErrorHook(void) {
 static int is_sw4_pushed(void* args) {
 	// activo bajo
 	return !Chip_GPIO_GetPinState(LPC_GPIO, 1, 31);
-}
-
-static void queue_cb(queue_event_t event) {
-	static TaskType taskWaitingPush = 0xFF;
-	static TaskType taskWaitingPop = 0xFF;
-
-	if (event == WAIT_EVENT_PUSH) {
-		if (taskWaitingPush != 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de push\n");
-			ErrorHook();
-		}
-		GetTaskID(&taskWaitingPush);
-		WaitEvent(eventQueue);
-		taskWaitingPush = 0xFF;
-		ClearEvent(eventQueue);
-	} else if (event == FIRE_EVENT_PUSH) {
-		if (taskWaitingPush == 0xFF) {
-			printf("queue: no hay tarea esperando un evento de push\n");
-			ErrorHook();
-		}
-		SetEvent(taskWaitingPush, eventQueue);
-	} else if (event == WAIT_EVENT_POP) {
-		if (taskWaitingPop != 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de pop\n");
-			ErrorHook();
-		}
-		GetTaskID(&taskWaitingPop);
-		WaitEvent(eventQueue);
-		taskWaitingPop = 0xFF;
-		ClearEvent(eventQueue);
-	} else if (event == FIRE_EVENT_POP) {
-		if (taskWaitingPop == 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de pop\n");
-			ErrorHook();
-		}
-		SetEvent(taskWaitingPop, eventQueue);
-	}
 }
 
