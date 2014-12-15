@@ -90,10 +90,15 @@ static int is_sw4_pushed(void* args) {
 
 /* lógica de manejo de timeout de colas */
 TASK(TaskTimeoutPush) {
-	SetEvent(queue.task_waiting_timeout_push, EventQueue);
+	if (queue.task_waiting_timeout_push != 0xFF) {
+		SetEvent(queue.task_waiting_timeout_push, EventQueue);
+	}
 	TerminateTask();
 }
+
 TASK(TaskTimeoutPop) {
-	SetEvent(queue.task_waiting_timeout_pop, EventQueue);
+	if (queue.task_waiting_timeout_pop != 0xFF) {
+		SetEvent(queue.task_waiting_timeout_pop, EventQueue);
+	}
 	TerminateTask();
 }

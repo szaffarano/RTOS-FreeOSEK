@@ -17,10 +17,10 @@
 
 #include <queue.h>
 
-#define	PRODUCER_CYCLE		500
+#define	PRODUCER_CYCLE		100
 #define PRODUCER_TIMEOUT	1000
-#define	CONSUMER_CYCLE		3000
-#define CONSUMER_TIMEOUT	2000
+#define	CONSUMER_CYCLE		300
+#define CONSUMER_TIMEOUT	1000
 
 static queue_t queue;
 static int counter;
@@ -82,11 +82,16 @@ TASK(taskConsumer) {
 }
 
 TASK(TaskTimeoutPush) {
-	SetEvent(queue.task_waiting_timeout_push, EventQueue);
+	if (queue.task_waiting_timeout_push != 0xFF) {
+		SetEvent(queue.task_waiting_timeout_push, EventQueue);
+	}
 	TerminateTask();
 }
+
 TASK(TaskTimeoutPop) {
-	SetEvent(queue.task_waiting_timeout_pop, EventQueue);
+	if (queue.task_waiting_timeout_pop != 0xFF) {
+		SetEvent(queue.task_waiting_timeout_pop, EventQueue);
+	}
 	TerminateTask();
 }
 
