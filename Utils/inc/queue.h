@@ -8,6 +8,8 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
+#include <OsekApi.h>
+
 #define DEBUG_QUEUE 1
 
 #define MAX_QUEUE_SIZE	128
@@ -24,16 +26,21 @@ typedef struct {
 	unsigned int size;
 	unsigned int idx_push;
 	unsigned int idx_pop;
-	queue_event_cb_t queue_event_cb;
 
 	int blocked_by_push;
 	int blocked_by_pop;
+
+	// osek stuff
+	EventMaskType event;
+	TaskType taskWaitingPush;
+	TaskType taskWaitingPop;
+
 } queue_t;
 
 /**
  * Inicializa la cola.  Recibe el tamaño de la cola.
  */
-void queue_init(queue_t* queue, unsigned int size, queue_event_cb_t queue_cb);
+void queue_init(queue_t* queue, unsigned int size, EventMaskType event);
 
 /**
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.

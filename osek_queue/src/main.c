@@ -23,8 +23,6 @@
 static queue_t queue;
 static int counter;
 
-static void queue_cb(queue_event_t event);
-
 int main(void) {
 	SystemCoreClockUpdate();
 
@@ -32,7 +30,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, 1, queue_cb);
+	queue_init(&queue, 1, eventQueue);
 
 	counter = 0;
 
@@ -76,41 +74,4 @@ TASK(taskConsumer) {
 void ErrorHook(void) {
 	/* kernel panic :( */
 	ShutdownOS(0);
-}
-
-static void queue_cb(queue_event_t event) {
-	static TaskType taskWaitingPush = 0xFF;
-	static TaskType taskWaitingPop = 0xFF;
-
-	if (event == WAIT_EVENT_PUSH) {
-		if (taskWaitingPush != 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de push\n");
-			ErrorHook();
-		}
-		GetTaskID(&taskWaitingPush);
-		WaitEvent(eventQueue);
-		taskWaitingPush = 0xFF;
-		ClearEvent(eventQueue);
-	} else if (event == FIRE_EVENT_PUSH) {
-		if (taskWaitingPush == 0xFF) {
-			printf("queue: no hay tarea esperando un evento de push\n");
-			ErrorHook();
-		}
-		SetEvent(taskWaitingPush, eventQueue);
-	} else if (event == WAIT_EVENT_POP) {
-		if (taskWaitingPop != 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de pop\n");
-			ErrorHook();
-		}
-		GetTaskID(&taskWaitingPop);
-		WaitEvent(eventQueue);
-		taskWaitingPop = 0xFF;
-		ClearEvent(eventQueue);
-	} else if (event == FIRE_EVENT_POP) {
-		if (taskWaitingPop == 0xFF) {
-			printf("queue: ya hay una tarea esperando un evento de pop\n");
-			ErrorHook();
-		}
-		SetEvent(taskWaitingPop, eventQueue);
-	}
 }

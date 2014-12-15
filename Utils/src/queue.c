@@ -40,13 +40,17 @@ static void queue_wait_event_pop(queue_t *queue);
  */
 static void queue_fire_event_pop(queue_t *queue);
 
-void queue_init(queue_t* queue, unsigned int size, queue_event_cb_t queue_cb) {
+void queue_init(queue_t* queue, unsigned int size, EventMaskType event) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
 	queue->size = (size + 1) < MAX_QUEUE_SIZE ? (size + 1) : MAX_QUEUE_SIZE;
-	queue->queue_event_cb = queue_cb;
 	queue->blocked_by_pop = 0;
 	queue->blocked_by_push = 0;
+
+	// osek stuff
+	queue->event = event;
+	queue->taskWaitingPush = 0xFF;
+	queue->taskWaitingPop = 0xFF;
 }
 
 void queue_push(queue_t *queue, int value) {
@@ -96,14 +100,28 @@ static inline int next_idx(int idx, unsigned int size) {
 static void queue_wait_event_push(queue_t *queue) {
 	queue->blocked_by_push = 1;
 	q_debug("Invocando callback wait_event_push\n");
-	queue->queue_event_cb(WAIT_EVENT_PUSH);
+
+	if (queue->taskWaitingPush != 0xFF) {
+		q_debug("queue: ya hay una tarea esperando un evento de push\n");
+		ErrorHook();
+	}
+
+	GetTaskID(&queue->taskWaitingPush);
+	WaitEvent(queue->event);
+	queue->taskWaitingPush = 0xFF;
+	ClearEvent(queue->event);
+
 	q_debug("Callback wait_event devolvió el control\n");
 }
 
 static void queue_fire_event_push(queue_t *queue) {
 	if (queue->blocked_by_push) {
 		q_debug("Invocando callback fire_event_push\n");
-		queue->queue_event_cb(FIRE_EVENT_PUSH);
+		if (queue->taskWaitingPush == 0xFF) {
+			q_debug("queue: no hay tarea esperando un evento de push\n");
+			ErrorHook();
+		}
+		SetEvent(queue->taskWaitingPush, queue->event);
 		queue->blocked_by_push = 0;
 	}
 }
@@ -111,14 +129,27 @@ static void queue_fire_event_push(queue_t *queue) {
 static void queue_wait_event_pop(queue_t *queue) {
 	queue->blocked_by_pop = 1;
 	q_debug("Invocando callback wait_event_pop\n");
-	queue->queue_event_cb(WAIT_EVENT_POP);
+
+	if (queue->taskWaitingPop != 0xFF) {
+		q_debug("queue: ya hay una tarea esperando un evento de pop\n");
+		ErrorHook();
+	}
+	GetTaskID(&queue->taskWaitingPop);
+	WaitEvent(queue->event);
+	queue->taskWaitingPop = 0xFF;
+	ClearEvent(queue->event);
+
 	q_debug("Callback wait_event devolvió el control\n");
 }
 
 static void queue_fire_event_pop(queue_t *queue) {
 	if (queue->blocked_by_pop) {
 		q_debug("Invocando callback fire_event_pop\n");
-		queue->queue_event_cb(FIRE_EVENT_POP);
+		if (queue->taskWaitingPop == 0xFF) {
+			q_debug("queue: ya hay una tarea esperando un evento de pop\n");
+			ErrorHook();
+		}
+		SetEvent(queue->taskWaitingPop, queue->event);
 		queue->blocked_by_pop = 0;
 	}
 }
