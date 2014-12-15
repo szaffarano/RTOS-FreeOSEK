@@ -81,7 +81,7 @@ ALARM fireToggleLedEvent {
     ACTION = ACTIVATETASK {
         TASK = taskToggle;
     };
-    AUTOSTART = FALSE {
+    AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     	ALARMTIME = 0;
     	CYCLETIME = 300;
@@ -101,18 +101,6 @@ COUNTER SoftwareCounter {
    TICKSPERBASE = 1;
    MINCYCLE = 1;
    TYPE = SOFTWARE;
-};
-
-ALARM wakeUpCounter {
-    COUNTER = SoftwareCounter;
-    ACTION = ALARMCALLBACK {
-        ALARMCALLBACKNAME = "counterHook";
-    };
-    AUTOSTART = TRUE {
-        APPMODE = AppMode1;
-        ALARMTIME = 0;
-        CYCLETIME = 1;
-    };
 };
 
 ALARM IncrementSWCounter {

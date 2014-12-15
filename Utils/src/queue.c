@@ -15,8 +15,6 @@
 #define q_debug(format, ...)
 #endif
 
-extern unsigned long SystemTicks();
-
 /**
  * Calcula el siguiente índice en la cola circular
  */
@@ -42,7 +40,7 @@ static void queue_wait_event_pop(queue_t *queue);
  */
 static void queue_fire_event_pop(queue_t *queue);
 
-void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue) {
+void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue, AlarmType alarmQueue) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
 	queue->size = (size + 1) < MAX_QUEUE_SIZE ? (size + 1) : MAX_QUEUE_SIZE;
@@ -51,13 +49,14 @@ void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue) {
 
 	// osek stuff
 	queue->eventQueue = eventQueue;
+	queue->alarmQueue = alarmQueue;
 	queue->taskWaitingPush = 0xFF;
 	queue->taskWaitingPop = 0xFF;
 }
 
 queue_status_t queue_push(queue_t *queue, int value, unsigned long timeout) {
 	queue_status_t status = QUEUE_OK;
-	unsigned long now = SystemTicks();
+	unsigned long elapsedTime = 0;
 
 	int next_push = next_idx(queue->idx_push, queue->size);
 
@@ -69,14 +68,15 @@ queue_status_t queue_push(queue_t *queue, int value, unsigned long timeout) {
 			queue_wait_event_push(queue);
 		} else {
 			q_debug("queue_push: esperando evento push con timeout: %d\n", timeout);
-			GetTaskID(&queue->taskWaitingPush);
+			GetTaskID(&queue->taskWaitingTimeout);
 			while (1) {
-				if (next_push != queue->idx_pop || (now + timeout) < SystemTicks()) {
+				if (next_push != queue->idx_pop || elapsedTime > timeout) {
 					break;
 				}
-				SetRelAlarm(0, 1, 0);
-				WaitEvent(queue->taskWaitingPush);
+				SetRelAlarm(queue->alarmQueue, 1, 0);
+				WaitEvent(queue->eventQueue);
 				ClearEvent(queue->eventQueue);
+				elapsedTime++;
 			}
 			queue->taskWaitingPush = 0xFF;
 			if (next_push == queue->idx_pop) {
@@ -97,7 +97,7 @@ queue_status_t queue_push(queue_t *queue, int value, unsigned long timeout) {
 
 queue_status_t queue_pop(queue_t *queue, int *value, unsigned long timeout) {
 	queue_status_t status = QUEUE_OK;
-	unsigned long now = SystemTicks();
+	unsigned long elapsedTime = 0;
 
 	if (queue->idx_push == queue->idx_pop) {
 		// cola vacía, espero evento
@@ -107,16 +107,17 @@ queue_status_t queue_pop(queue_t *queue, int *value, unsigned long timeout) {
 			queue_wait_event_pop(queue);
 		} else {
 			q_debug("queue_pop: esperando evento pop con timeout: %d\n", timeout);
-			GetTaskID(&queue->taskWaitingPush);
+			GetTaskID(&queue->taskWaitingTimeout);
 			while (1) {
-				if (queue->idx_push != queue->idx_pop || (now + timeout) < SystemTicks()) {
+				if (queue->idx_push != queue->idx_pop || elapsedTime > timeout) {
 					break;
 				}
-				SetRelAlarm(0, 1, 0);
-				WaitEvent(queue->taskWaitingPush);
+				SetRelAlarm(queue->alarmQueue, 1, 0);
+				WaitEvent(queue->eventQueue);
 				ClearEvent(queue->eventQueue);
+				elapsedTime++;
 			}
-			queue->taskWaitingPush = 0xFF;
+			queue->taskWaitingTimeout = 0xFF;
 			if (queue->idx_push == queue->idx_pop) {
 				q_debug("queue_pop: No se hace pop, se fue por timeout\n");
 				return QUEUE_TIMEOUT;

@@ -36,14 +36,16 @@ typedef struct {
 
 	// osek stuff
 	EventMaskType eventQueue;
+	AlarmType alarmQueue;
 	TaskType taskWaitingPush;
 	TaskType taskWaitingPop;
+	TaskType taskWaitingTimeout;
 } queue_t;
 
 /**
  * Inicializa la cola.  Recibe el tamaño de la cola.
  */
-void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue);
+void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue, AlarmType alarmQueue);
 
 /**
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.
