@@ -1,0 +1,128 @@
+OSEK OSEK {
+
+OS	TiempoTranscurridoOS {
+    STATUS = EXTENDED;
+    ERRORHOOK = TRUE;
+    PRETASKHOOK = FALSE;
+	POSTTASKHOOK = FALSE;
+	STARTUPHOOK = FALSE;
+	SHUTDOWNHOOK = FALSE;
+	USERESSCHEDULER = FALSE;
+	MEMMAP = FALSE;
+};
+
+APPMODE = AppMode1;
+
+EVENT = EventQueue;
+EVENT = EventTimeoutPush;
+EVENT = EventTimeoutPop;
+
+TASK taskDebounce {
+    PRIORITY = 5;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = NON;
+    EVENT = EventQueue;
+    EVENT = EventTimeoutPush;
+	EVENT = EventTimeoutPop;
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    };
+}
+ALARM wakeUpDebounce {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+		TASK = taskDebounce;
+    };
+};
+
+TASK taskBlink {
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    AUTOSTART = TRUE  {
+    	APPMODE = AppMode1;
+    };
+}
+ALARM wakeUpBlink {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+		TASK = taskBlink;
+    };
+};
+
+/* Tarea que prende el led rojo si se va por timeout la espera de la señal */
+TASK taskController {
+	PRIORITY = 10;
+	ACTIVATION = 1;
+	STACK= 512;
+	TYPE = EXTENDED;
+	EVENT = EventQueue;
+	EVENT = EventTimeoutPush;
+	EVENT = EventTimeoutPop;
+	SCHEDULE = FULL;
+	AUTOSTART = FALSE {
+		APPMODE = AppMode1;
+	}
+}
+
+/* Tareas para menejo de timeout en colas */
+TASK TaskTimeoutPush {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPush;
+};
+TASK TaskTimeoutPop {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPop;
+};
+ALARM AlarmTimeoutPush {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPush;
+    };
+};
+ALARM AlarmTimeoutPop {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPop;
+    };
+};
+COUNTER HardwareCounter {
+   MAXALLOWEDVALUE = 100;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = HARDWARE;
+   COUNTER = HWCOUNTER0;
+};
+
+COUNTER SoftwareCounter {
+   MAXALLOWEDVALUE = 5000;
+   TICKSPERBASE = 1;
+   MINCYCLE = 1;
+   TYPE = SOFTWARE;
+};
+
+ALARM IncrementSWCounter {
+   COUNTER = HardwareCounter;
+   ACTION = INCREMENT {
+      COUNTER = SoftwareCounter;
+   };
+   AUTOSTART = TRUE {
+      APPMODE = AppMode1;
+      ALARMTIME = 1;
+      CYCLETIME = 1;
+   };
+};
+
+};
