@@ -13,16 +13,20 @@ OS	TiempoTranscurridoOS {
 
 APPMODE = AppMode1;
 
-EVENT = eventQueue;
+EVENT = EventQueue;
+EVENT = EventTimeoutPush;
+EVENT = EventTimeoutPop;
+
 RESOURCE = mutex;
 
+/* Tarea de debounce */
 TASK taskDebounce {
     PRIORITY = 5;
     ACTIVATION = 1;
     STACK = 512;
     TYPE = EXTENDED;
     SCHEDULE = NON;
-    EVENT = eventQueue;
+    EVENT = EventQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     };
@@ -34,6 +38,7 @@ ALARM wakeUpDebounce {
     };
 };
 
+/* Tarea que blinkea un LED */
 TASK taskBlink {
     PRIORITY = 1;
     ACTIVATION = 1;
@@ -49,12 +54,13 @@ ALARM wakeUpBlink {
     };
 };
 
+/* Tarea consumidora */
 TASK taskConsumer {
 	PRIORITY = 10;
 	ACTIVATION = 1;
 	STACK= 512;
 	TYPE = EXTENDED;
-	EVENT = eventQueue;
+	EVENT = EventQueue;
 	RESOURCE = mutex;
 	SCHEDULE = FULL;
 	AUTOSTART = TRUE {
@@ -68,6 +74,37 @@ ALARM wakeUpConsumer {
     };
 };
 
+/* Tareas para menejo de timeout en colas */
+TASK TaskTimeoutPush {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPush;
+};
+TASK TaskTimeoutPop {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPop;
+};
+ALARM AlarmTimeoutPush {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPush;
+    };
+};
+ALARM AlarmTimeoutPop {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPop;
+    };
+};
+
+/* Contadores */
 COUNTER HardwareCounter {
    MAXALLOWEDVALUE = 100;
    TICKSPERBASE = 1;

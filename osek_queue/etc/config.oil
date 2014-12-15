@@ -12,34 +12,13 @@ OS	QueueOS {
 };
 
 APPMODE = AppMode1;
+
+/* Definición de vventos de manejo de colas */
 EVENT = EventQueue;
 EVENT = EventTimeoutPush;
 EVENT = EventTimeoutPop;
 
-TASK taskProducer {
-    PRIORITY = 20;
-    ACTIVATION = 1;
-    STACK = 1024;
-    TYPE = EXTENDED;
-    SCHEDULE = FULL;
-    EVENT = EventQueue;
-    AUTOSTART = TRUE {
-    	APPMODE = AppMode1;
-    }
-};
-
-TASK taskConsumer {
-    PRIORITY = 10;
-    ACTIVATION = 1;
-    STACK = 1024;
-    TYPE = EXTENDED;
-    SCHEDULE = FULL;
-    EVENT = EventQueue;
-    AUTOSTART = TRUE {
-    	APPMODE = AppMode1;
-    }
-};
-
+/* Tarea que togglea un LED */
 TASK taskToggle {
     PRIORITY = 10;
     ACTIVATION = 1;
@@ -47,51 +26,6 @@ TASK taskToggle {
     TYPE = EXTENDED;
     SCHEDULE = FULL;
 };
-
-TASK TaskTimeoutPush {
-    PRIORITY = 10;
-    ACTIVATION = 1;
-    STACK = 512;
-    TYPE = EXTENDED;
-    SCHEDULE = FULL;
-    EVENT = EventTimeoutPush;
-};
-ALARM AlarmTimeoutPush {
-    COUNTER = SoftwareCounter;
-    ACTION = ACTIVATETASK {
-        TASK = TaskTimeoutPush;
-    };
-};
-
-TASK TaskTimeoutPop {
-    PRIORITY = 10;
-    ACTIVATION = 1;
-    STACK = 512;
-    TYPE = EXTENDED;
-    SCHEDULE = FULL;
-    EVENT = EventTimeoutPop;
-};
-ALARM AlarmTimeoutPop {
-    COUNTER = SoftwareCounter;
-    ACTION = ACTIVATETASK {
-        TASK = TaskTimeoutPop;
-    };
-};
-
-ALARM activateProducer {
-    COUNTER = SoftwareCounter;
-    ACTION = ACTIVATETASK {
-        TASK = taskProducer;
-    };
-};
-
-ALARM activateConsumer {
-    COUNTER = SoftwareCounter;
-    ACTION = ACTIVATETASK {
-        TASK = taskConsumer;
-    };
-};
-
 ALARM fireToggleLedEvent {
     COUNTER = SoftwareCounter;
     ACTION = ACTIVATETASK {
@@ -104,6 +38,75 @@ ALARM fireToggleLedEvent {
     };
 };
 
+/* Tarea productora */
+TASK taskProducer {
+    PRIORITY = 20;
+    ACTIVATION = 1;
+    STACK = 1024;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventQueue;
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    }
+};
+ALARM activateProducer {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskProducer;
+    };
+};
+
+/* Tarea consumidora */
+TASK taskConsumer {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 1024;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventQueue;
+    AUTOSTART = TRUE {
+    	APPMODE = AppMode1;
+    }
+};
+ALARM activateConsumer {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = taskConsumer;
+    };
+};
+
+/* Tareas para menejo de timeout en colas */
+TASK TaskTimeoutPush {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPush;
+};
+TASK TaskTimeoutPop {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeoutPop;
+};
+ALARM AlarmTimeoutPush {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPush;
+    };
+};
+ALARM AlarmTimeoutPop {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeoutPop;
+    };
+};
+
+/* Contadores */
 COUNTER HardwareCounter {
    MAXALLOWEDVALUE = 100;
    TICKSPERBASE = 1;

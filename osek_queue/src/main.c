@@ -82,11 +82,11 @@ TASK(taskConsumer) {
 }
 
 TASK(TaskTimeoutPush) {
-	SetEvent(queue.taskWaitingTimeoutPush, EventQueue);
+	SetEvent(queue.task_waiting_timeout_push, EventQueue);
 	TerminateTask();
 }
 TASK(TaskTimeoutPop) {
-	SetEvent(queue.taskWaitingTimeoutPop, EventQueue);
+	SetEvent(queue.task_waiting_timeout_pop, EventQueue);
 	TerminateTask();
 }
 

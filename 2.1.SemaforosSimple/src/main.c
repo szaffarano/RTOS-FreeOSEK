@@ -29,7 +29,7 @@ int main(void) {
 	Chip_GPIO_SetDir(LPC_GPIO, 1, 31, false);
 	sw4 = debounce_add(DEBOUNCE_TIME / DEBOUNCE_CYCLE, is_sw4_pushed, NULL);
 
-	queue_init(&queue, 1, eventQueue);
+	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop);
 
 	StartOS(AppMode1);
 
@@ -43,7 +43,7 @@ TASK(taskDebounce) {
 	debounce_update(&sw4);
 
 	if (sw4.change == ROSE) {
-		queue_push(&queue, 1);
+		queue_push(&queue, 1, 0);
 	}
 
 	SetRelAlarm(wakeUpDebounce, DEBOUNCE_CYCLE, 0);
@@ -65,7 +65,7 @@ TASK(taskBlink) {
 
 TASK(taskConsumer) {
 	int value;
-	queue_pop(&queue, &value);
+	queue_pop(&queue, &value, 0);
 
 	GetResource(mutex);
 	blinkCounter += BLINKS;
@@ -88,3 +88,12 @@ static int is_sw4_pushed(void* args) {
 	return !Chip_GPIO_GetPinState(LPC_GPIO, 1, 31);
 }
 
+/* lógica de manejo de timeout de colas */
+TASK(TaskTimeoutPush) {
+	SetEvent(queue.task_waiting_timeout_push, EventQueue);
+	TerminateTask();
+}
+TASK(TaskTimeoutPop) {
+	SetEvent(queue.task_waiting_timeout_pop, EventQueue);
+	TerminateTask();
+}
