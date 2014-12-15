@@ -12,15 +12,8 @@ OS	QueueOS {
 };
 
 APPMODE = AppMode1;
-EVENT = eventQueue;
-
-TASK taskToggle {
-    PRIORITY = 10;
-    ACTIVATION = 1;
-    STACK = 512;
-    TYPE = BASIC;
-    SCHEDULE = NON;
-};
+EVENT = EventQueue;
+EVENT = EventTimeout;
 
 TASK taskProducer {
     PRIORITY = 20;
@@ -28,22 +21,45 @@ TASK taskProducer {
     STACK = 1024;
     TYPE = EXTENDED;
     SCHEDULE = FULL;
-    EVENT = eventQueue;
+    EVENT = EventQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     }
 };
 
 TASK taskConsumer {
-    PRIORITY = 20;
+    PRIORITY = 10;
     ACTIVATION = 1;
     STACK = 1024;
     TYPE = EXTENDED;
     SCHEDULE = FULL;
-    EVENT = eventQueue;
+    EVENT = EventQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     }
+};
+
+TASK taskToggle {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+};
+
+TASK TaskTimeout {
+    PRIORITY = 10;
+    ACTIVATION = 1;
+    STACK = 512;
+    TYPE = EXTENDED;
+    SCHEDULE = FULL;
+    EVENT = EventTimeout;
+};
+ALARM AlarmTimeout {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+        TASK = TaskTimeout;
+    };
 };
 
 ALARM activateProducer {
@@ -65,7 +81,7 @@ ALARM fireToggleLedEvent {
     ACTION = ACTIVATETASK {
         TASK = taskToggle;
     };
-    AUTOSTART = TRUE {
+    AUTOSTART = FALSE {
     	APPMODE = AppMode1;
     	ALARMTIME = 0;
     	CYCLETIME = 300;
@@ -81,10 +97,22 @@ COUNTER HardwareCounter {
 };
 
 COUNTER SoftwareCounter {
-   MAXALLOWEDVALUE = 5000;
+   MAXALLOWEDVALUE = 15000;
    TICKSPERBASE = 1;
    MINCYCLE = 1;
    TYPE = SOFTWARE;
+};
+
+ALARM wakeUpCounter {
+    COUNTER = SoftwareCounter;
+    ACTION = ALARMCALLBACK {
+        ALARMCALLBACKNAME = "counterHook";
+    };
+    AUTOSTART = TRUE {
+        APPMODE = AppMode1;
+        ALARMTIME = 0;
+        CYCLETIME = 1;
+    };
 };
 
 ALARM IncrementSWCounter {

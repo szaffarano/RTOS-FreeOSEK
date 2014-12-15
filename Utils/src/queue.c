@@ -15,6 +15,8 @@
 #define q_debug(format, ...)
 #endif
 
+extern unsigned long SystemTicks();
+
 /**
  * Calcula el siguiente índice en la cola circular
  */
@@ -40,7 +42,7 @@ static void queue_wait_event_pop(queue_t *queue);
  */
 static void queue_fire_event_pop(queue_t *queue);
 
-void queue_init(queue_t* queue, unsigned int size, EventMaskType event) {
+void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue) {
 	queue->idx_pop = 0;
 	queue->idx_push = 0;
 	queue->size = (size + 1) < MAX_QUEUE_SIZE ? (size + 1) : MAX_QUEUE_SIZE;
@@ -48,18 +50,40 @@ void queue_init(queue_t* queue, unsigned int size, EventMaskType event) {
 	queue->blocked_by_push = 0;
 
 	// osek stuff
-	queue->event = event;
+	queue->eventQueue = eventQueue;
 	queue->taskWaitingPush = 0xFF;
 	queue->taskWaitingPop = 0xFF;
 }
 
-void queue_push(queue_t *queue, int value) {
+queue_status_t queue_push(queue_t *queue, int value, unsigned long timeout) {
+	queue_status_t status = QUEUE_OK;
+	unsigned long now = SystemTicks();
+
 	int next_push = next_idx(queue->idx_push, queue->size);
 
 	if (next_push == queue->idx_pop) {
 		// cola llena, espero evento de cola vacía
 		q_debug("queue_push: No pude hacer push, cola llena!\n");
-		queue_wait_event_push(queue);
+		if (timeout == 0) {
+			q_debug("queue_push: esperando evento push con timeout infinito\n");
+			queue_wait_event_push(queue);
+		} else {
+			q_debug("queue_push: esperando evento push con timeout: %d\n", timeout);
+			GetTaskID(&queue->taskWaitingPush);
+			while (1) {
+				if (next_push != queue->idx_pop || (now + timeout) < SystemTicks()) {
+					break;
+				}
+				SetRelAlarm(0, 1, 0);
+				WaitEvent(queue->taskWaitingPush);
+				ClearEvent(queue->eventQueue);
+			}
+			queue->taskWaitingPush = 0xFF;
+			if (next_push == queue->idx_pop) {
+				q_debug("queue_push: No se hace push, se fue por timeout\n");
+				return QUEUE_TIMEOUT;
+			}
+		}
 	}
 
 	queue->idx_push = next_push;
@@ -67,13 +91,37 @@ void queue_push(queue_t *queue, int value) {
 
 	// si hay una tarea esperando un evento, notifico
 	queue_fire_event_pop(queue);
+
+	return status;
 }
 
-void queue_pop(queue_t *queue, int *value) {
+queue_status_t queue_pop(queue_t *queue, int *value, unsigned long timeout) {
+	queue_status_t status = QUEUE_OK;
+	unsigned long now = SystemTicks();
+
 	if (queue->idx_push == queue->idx_pop) {
 		// cola vacía, espero evento
 		q_debug("queue_pop: No pude hacer pop, cola vacia\n");
-		queue_wait_event_pop(queue);
+		if (timeout == 0) {
+			q_debug("queue_pop: esperando evento pop con timeout infinito\n");
+			queue_wait_event_pop(queue);
+		} else {
+			q_debug("queue_pop: esperando evento pop con timeout: %d\n", timeout);
+			GetTaskID(&queue->taskWaitingPush);
+			while (1) {
+				if (queue->idx_push != queue->idx_pop || (now + timeout) < SystemTicks()) {
+					break;
+				}
+				SetRelAlarm(0, 1, 0);
+				WaitEvent(queue->taskWaitingPush);
+				ClearEvent(queue->eventQueue);
+			}
+			queue->taskWaitingPush = 0xFF;
+			if (queue->idx_push == queue->idx_pop) {
+				q_debug("queue_pop: No se hace pop, se fue por timeout\n");
+				return QUEUE_TIMEOUT;
+			}
+		}
 	}
 
 	int i = next_idx(queue->idx_pop, queue->size);
@@ -83,6 +131,8 @@ void queue_pop(queue_t *queue, int *value) {
 
 	// si hay una tarea esperando un evento, notifico
 	queue_fire_event_push(queue);
+
+	return status;
 }
 
 void queue_dump(queue_t *queue) {
@@ -107,9 +157,9 @@ static void queue_wait_event_push(queue_t *queue) {
 	}
 
 	GetTaskID(&queue->taskWaitingPush);
-	WaitEvent(queue->event);
+	WaitEvent(queue->eventQueue);
 	queue->taskWaitingPush = 0xFF;
-	ClearEvent(queue->event);
+	ClearEvent(queue->eventQueue);
 
 	q_debug("Callback wait_event devolvió el control\n");
 }
@@ -121,7 +171,7 @@ static void queue_fire_event_push(queue_t *queue) {
 			q_debug("queue: no hay tarea esperando un evento de push\n");
 			ErrorHook();
 		}
-		SetEvent(queue->taskWaitingPush, queue->event);
+		SetEvent(queue->taskWaitingPush, queue->eventQueue);
 		queue->blocked_by_push = 0;
 	}
 }
@@ -135,9 +185,9 @@ static void queue_wait_event_pop(queue_t *queue) {
 		ErrorHook();
 	}
 	GetTaskID(&queue->taskWaitingPop);
-	WaitEvent(queue->event);
+	WaitEvent(queue->eventQueue);
 	queue->taskWaitingPop = 0xFF;
-	ClearEvent(queue->event);
+	ClearEvent(queue->eventQueue);
 
 	q_debug("Callback wait_event devolvió el control\n");
 }
@@ -149,7 +199,7 @@ static void queue_fire_event_pop(queue_t *queue) {
 			q_debug("queue: ya hay una tarea esperando un evento de pop\n");
 			ErrorHook();
 		}
-		SetEvent(queue->taskWaitingPop, queue->event);
+		SetEvent(queue->taskWaitingPop, queue->eventQueue);
 		queue->blocked_by_pop = 0;
 	}
 }
