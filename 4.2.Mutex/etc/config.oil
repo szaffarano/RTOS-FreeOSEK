@@ -28,9 +28,10 @@ TASK taskDebounce {
     TYPE = EXTENDED;
     SCHEDULE = FULL;
     EVENT = EventQueue;
+    RESOURCE = MutexQueue;
     EVENT = EventTimeoutPush;
-	EVENT = EventTimeoutPop;
-	RESOURCE = MutexQueue;
+    EVENT = EventTimeoutPop;
+    RESOURCE = MutexQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     };
@@ -66,6 +67,7 @@ TASK taskController {
 	STACK= 512;
 	TYPE = EXTENDED;
 	EVENT = EventQueue;
+        RESOURCE = MutexQueue;
 	EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
 	EVENT = EventLED;
@@ -96,6 +98,7 @@ TASK taskPulse {
 	STACK= 512;
 	TYPE = EXTENDED;
 	EVENT = EventQueue;
+        RESOURCE = MutexQueue;
 	EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
 	EVENT = EventLED;

@@ -32,7 +32,7 @@ int main(void) {
 
 	Board_LED_Set(0, false);
 
-	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop);
+	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop, MutexQueue);
 
 	counter = 0;
 

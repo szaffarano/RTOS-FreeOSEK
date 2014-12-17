@@ -18,6 +18,8 @@ EVENT = EventTimeoutPush;
 EVENT = EventTimeoutPop;
 EVENT = EventLED;
 
+RESOURCE = MutexQueue;
+
 TASK taskDebounce {
     PRIORITY = 5;
     ACTIVATION = 1;
@@ -25,6 +27,7 @@ TASK taskDebounce {
     TYPE = EXTENDED;
     SCHEDULE = NON;
     EVENT = EventQueue;
+    RESOURCE = MutexQueue;
     EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
     AUTOSTART = TRUE {
@@ -62,6 +65,7 @@ TASK taskController {
 	STACK= 512;
 	TYPE = EXTENDED;
 	EVENT = EventQueue;
+        RESOURCE = MutexQueue;
 	EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
 	EVENT = EventLED;

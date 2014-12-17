@@ -29,7 +29,7 @@ int main(void) {
 	Chip_GPIO_SetDir(LPC_GPIO, 1, 31, false);
 	sw4 = debounce_add(DEBOUNCE_TIME / DEBOUNCE_CYCLE, is_sw4_pushed, NULL);
 
-	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop);
+	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop, MutexQueue);
 
 	StartOS(AppMode1);
 
@@ -52,14 +52,14 @@ TASK(taskDebounce) {
 }
 
 TASK(taskBlink) {
-	GetResource(mutex);
+	GetResource(Mutex);
 	if (--blinkCounter > 0) {
 		Board_LED_Toggle(0);
 		SetRelAlarm(wakeUpBlink, 100, 0);
 	} else {
 		Board_LED_Set(0, 0);
 	}
-	ReleaseResource(mutex);
+	ReleaseResource(Mutex);
 	TerminateTask();
 }
 
@@ -67,12 +67,12 @@ TASK(taskConsumer) {
 	int value;
 	queue_pop(&queue, &value, 0);
 
-	GetResource(mutex);
+	GetResource(Mutex);
 	blinkCounter += BLINKS;
 	if (blinkCounter == BLINKS) {
 		SetRelAlarm(wakeUpBlink, 100, 0);
 	}
-	ReleaseResource(mutex);
+	ReleaseResource(Mutex);
 	SetRelAlarm(wakeUpConsumer, 500, 0);
 
 	TerminateTask();

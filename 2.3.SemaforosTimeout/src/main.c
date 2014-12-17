@@ -36,7 +36,7 @@ int main(void) {
 	// RGB Azul
 	Chip_GPIO_SetDir(LPC_GPIO, 0, 26, true);
 
-	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop);
+	queue_init(&queue, 1, EventQueue, AlarmTimeoutPush, AlarmTimeoutPop, MutexQueue);
 
 	StartOS(AppMode1);
 

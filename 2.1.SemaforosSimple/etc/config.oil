@@ -17,7 +17,8 @@ EVENT = EventQueue;
 EVENT = EventTimeoutPush;
 EVENT = EventTimeoutPop;
 
-RESOURCE = mutex;
+RESOURCE = Mutex;
+RESOURCE = MutexQueue;
 
 /* Tarea de debounce */
 TASK taskDebounce {
@@ -27,6 +28,7 @@ TASK taskDebounce {
     TYPE = EXTENDED;
     SCHEDULE = NON;
     EVENT = EventQueue;
+    RESOURCE = MutexQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     };
@@ -45,7 +47,7 @@ TASK taskBlink {
     STACK = 512;
     TYPE = EXTENDED;
     SCHEDULE = FULL;
-    RESOURCE = mutex;
+    RESOURCE = Mutex;
 }
 ALARM wakeUpBlink {
     COUNTER = SoftwareCounter;
@@ -61,7 +63,8 @@ TASK taskConsumer {
 	STACK= 512;
 	TYPE = EXTENDED;
 	EVENT = EventQueue;
-	RESOURCE = mutex;
+    RESOURCE = MutexQueue;
+	RESOURCE = Mutex;
 	SCHEDULE = FULL;
 	AUTOSTART = TRUE {
 		APPMODE = AppMode1;
