@@ -19,15 +19,18 @@ EVENT = EventTimeoutPop;
 EVENT = EventLED;
 EVENT = EventPulse;
 
+RESOURCE = MutexQueue;
+
 TASK taskDebounce {
     PRIORITY = 5;
     ACTIVATION = 1;
     STACK = 512;
     TYPE = EXTENDED;
-    SCHEDULE = NON;
+    SCHEDULE = FULL;
     EVENT = EventQueue;
     EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
+	RESOURCE = MutexQueue;
     AUTOSTART = TRUE {
     	APPMODE = AppMode1;
     };
@@ -66,6 +69,7 @@ TASK taskController {
 	EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
 	EVENT = EventLED;
+	RESOURCE = MutexQueue;
 	SCHEDULE = FULL;
 	AUTOSTART = TRUE {
 		APPMODE = AppMode1;
@@ -95,6 +99,7 @@ TASK taskPulse {
 	EVENT = EventTimeoutPush;
 	EVENT = EventTimeoutPop;
 	EVENT = EventLED;
+	RESOURCE = MutexQueue;
 	EVENT = EventPulse
 	SCHEDULE = FULL;
 	AUTOSTART = TRUE {
@@ -106,6 +111,12 @@ ALARM wakeUpPulse {
     ACTION = SETEVENT {
 		TASK = taskPulse;
 		EVENT = EventPulse;
+    };
+};
+ALARM activatePulse {
+    COUNTER = SoftwareCounter;
+    ACTION = ACTIVATETASK {
+		TASK = taskPulse;
     };
 };
 
