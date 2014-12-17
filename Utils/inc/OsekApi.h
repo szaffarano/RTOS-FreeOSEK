@@ -14,6 +14,7 @@ typedef unsigned char StatusType;
 typedef TaskType* TaskRefType;
 typedef unsigned char AlarmType;
 typedef unsigned int TickType;
+typedef unsigned char ResourceType;
 
 extern StatusType WaitEvent(EventMaskType Mask);
 extern StatusType GetTaskID(TaskRefType TaskID);
@@ -22,5 +23,7 @@ extern StatusType ClearEvent(EventMaskType Mask);
 extern StatusType SetRelAlarm(AlarmType AlarmID, TickType Increment, TickType Cycle);
 extern StatusType Schedule(void);
 extern void ErrorHook(void);
+extern StatusType GetResource(ResourceType ResID);
+extern StatusType ReleaseResource(ResourceType ResID);
 
 #endif /* OSEKAPI_H_ */

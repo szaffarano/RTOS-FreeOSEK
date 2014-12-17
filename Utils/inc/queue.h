@@ -10,7 +10,7 @@
 
 #include <OsekApi.h>
 
-#define DEBUG_QUEUE 1
+#define DEBUG_QUEUE 0
 
 #define MAX_QUEUE_SIZE	128
 
@@ -50,6 +50,7 @@ typedef struct {
 	TaskType task_waiting_pop;
 	TaskType task_waiting_timeout_push;
 	TaskType task_waiting_timeout_pop;
+	ResourceType mutex;
 } queue_t;
 
 /*!
@@ -67,7 +68,7 @@ typedef struct {
  * 										evento de sincronización.
  */
 void queue_init(queue_t* queue, unsigned int size, EventMaskType eventQueue,
-		AlarmType alarmTimeoutPush, AlarmType alarmTimeoutPop);
+		AlarmType alarmTimeoutPush, AlarmType alarmTimeoutPop, ResourceType mutex);
 
 /*!
  * Agrega un elemento a la cola.  En el caso de estar llena bloquea hasta que se libere un slot.
