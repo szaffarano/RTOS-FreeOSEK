@@ -18,7 +18,6 @@ EVENT = EventTimeoutPush;
 EVENT = EventTimeoutPop;
 EVENT = EventLED;
 EVENT = EventPulse;
-EVENT = EventLED;
 
 RESOURCE = MutexQueue;
 

@@ -16,7 +16,6 @@ APPMODE = AppMode1;
 EVENT = EventQueue;
 EVENT = EventTimeoutPush;
 EVENT = EventTimeoutPop;
-EVENT = EventLED;
 EVENT = EventPulse;
 EVENT = EventLED;
 
